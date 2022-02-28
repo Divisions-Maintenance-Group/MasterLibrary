@@ -1,0 +1,25 @@
+create a nuget.config subbing your info....
+
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+        <clear />
+        <add key="github" value="https://nuget.pkg.github.com/Divisions-Maintenance-Group/index.json" />
+    </packageSources>
+    <packageSourceCredentials>
+        <github>
+            <add key="Username" value="gwatsondmg" />
+            <add key="ClearTextPassword" value="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" />
+        </github>
+    </packageSourceCredentials>
+</configuration>
+
+
+
+then run
+dotnet pack --configuration Release
+
+followed by
+
+
+dotnet nuget push "bin/Release/Library.Master.1.0.1.nupkg" --api-key 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 --source "github"
