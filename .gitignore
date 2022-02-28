@@ -281,3 +281,5 @@ src/Dmg.ProviderMaster2/rocksdb
 
 proto
 .vscode
+
+nuget.config
