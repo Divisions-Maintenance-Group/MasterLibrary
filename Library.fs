@@ -1,4 +1,4 @@
-﻿namespace Library.Master
+﻿namespace MasterLibrary
 
 module Framework = 
     open RocksDbSharp
