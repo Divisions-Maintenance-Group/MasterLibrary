@@ -1,5 +1,16 @@
 ﻿namespace MasterLibrary
 
+module helpers = 
+    let patch (list1: seq<'a>) (list2: seq<'a>) filterPredicate = 
+        seq {list1; list2} 
+        |> Seq.concat  
+        |> Seq.filter filterPredicate
+        |> Seq.distinct 
+        |> Seq.toList
+
+    let ifNull defaultValue value =
+        value |> Option.ofObj |> Option.defaultValue defaultValue
+
 module Framework = 
     open RocksDbSharp
 
@@ -228,20 +239,24 @@ module Framework =
         (stateTopic: Kafka.Kafka) : Async<Result<int64 * int64, seq<string>>> = 
     
         async {
-            let first = events |> Seq.head
-            let state = index.get uuid
-            let wrappedEvents = wrapper
             let eventUuid = UUID.New();
             let (success, uuid, entity, wrappedEvents) = 
-                ((Ok(), uuid, state, wrappedEvents), events) ||> Seq.fold (fun (keepGoing, uuid, state, wrappedEvents) event ->
-                    match keepGoing with
-                    | Error(_) -> (keepGoing, uuid, state, wrappedEvents)
-                    | Ok(_) -> 
-                        let keepGoing = event.validate state
-                        let entity = event.project(state)
-                        let wrappedEvents = event.addToEventWrapper(wrappedEvents)
-                        (keepGoing, uuid, entity, wrappedEvents)
-                )
+                try 
+                    let first = events |> Seq.head
+                    let state = index.get uuid
+                    let wrappedEvents = wrapper
+                    ((Ok(), uuid, state, wrappedEvents), events) ||> Seq.fold (fun (keepGoing, uuid, state, wrappedEvents) event ->
+                        match keepGoing with
+                        | Error(_) -> (keepGoing, uuid, state, wrappedEvents)
+                        | Ok(_) -> 
+                            let keepGoing = event.validate state
+                            let entity = event.project(state)
+                            let wrappedEvents = event.addToEventWrapper(wrappedEvents)
+                            (keepGoing, uuid, entity, wrappedEvents)
+                    )
+                with e ->
+                    printfn "%A" e
+                    (Error( seq {"Error while processing (There is likely an error in the validation or projection logic)"}), uuid, None, Unchecked.defaultof<'EventWrapper>)
             match success with
             | Ok(_) ->
                 let eventBytes = Google.Protobuf.MessageExtensions.ToByteArray(wrappedEvents)
