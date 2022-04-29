@@ -1,11 +1,11 @@
 ﻿namespace MasterLibrary
 
 module helpers = 
-    let patch (list1: seq<'a>) (list2: seq<'a>) filterPredicate = 
+    let patch (list1: seq<'a>) (list2: seq<'a>) filterPredicate duplicatePredicate = 
         seq {list1; list2} 
         |> Seq.concat  
         |> Seq.filter filterPredicate
-        |> Seq.distinct 
+        |> Seq.distinctBy duplicatePredicate
         |> Seq.toList
 
     let ifNull defaultValue value =
@@ -239,7 +239,7 @@ module Framework =
         (stateTopic: Kafka.Kafka) : Async<Result<int64 * int64, seq<string>>> = 
     
         async {
-            let eventUuid = UUID.New();
+            let eventUuid = uuid;
             let (success, uuid, entity, wrappedEvents) = 
                 try 
                     let first = events |> Seq.head
